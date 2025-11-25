@@ -22,7 +22,6 @@ envs = [
             "FrozenLake-v1",
             desc=generate_random_map(size=8),
             is_slippery=False,
-            render_mode="rgb_array",
         ),
     ),
     (
@@ -31,14 +30,13 @@ envs = [
             "FrozenLake-v1",
             desc=generate_random_map(size=16),
             is_slippery=False,
-            render_mode="rgb_array",
         ),
     ),
 ]
 
 agents = [
     ("UCS", UCSAgent),
-    # ("A*", AStarAgent),  # Descomenta cuando tengas A* listo
+    ("A*", AStarAgent),
 ]
 
 def find_start_and_goal(env):
@@ -87,44 +85,75 @@ def run_agent_on_env(agent_name, agent_class, env_name, env):
 
 def main():
     """Ejecutar los agentes con distintos entornos y comparar performance"""
-    print("🚀 Iniciando comparación de agentes de búsqueda")
+    print("Iniciando comparacion de agentes de busqueda")
     print("=" * 60)
-    
+
     results = {}
-    
+
     for env_name, env in envs:
-        print(f"\n🌍 Probando en ambiente: {env_name}")
+        print(f"\nProbando en ambiente: {env_name}")
         print("-" * 40)
-        
+
         results[env_name] = {}
-        
+
         for agent_name, agent_class in agents:
-            print(f"  🤖 Ejecutando {agent_name}...")
-            
+            print(f"  Ejecutando {agent_name}...")
+
             result = run_agent_on_env(agent_name, agent_class, env_name, env)
-            
+
             if result:
                 results[env_name][agent_name] = result
-                status = "✅ Éxito" if result['success'] else "❌ Falló"
+                status = "Exito" if result['success'] else "Fallo"
                 print(f"    {status} - Pasos: {result['steps']}, Tiempo: {result['time']:.3f}s")
             else:
                 results[env_name][agent_name] = None
-        
+
+            # Pausa para ver el resultado
+            time.sleep(1)
+
         env.close()
-    
+
     # Mostrar resumen final
-    print("\n📊 RESUMEN DE RESULTADOS")
+    print("\nRESUMEN DE RESULTADOS")
     print("=" * 60)
-    
+
     for env_name in results:
-        print(f"\n🌍 {env_name}:")
+        print(f"\n{env_name}:")
         for agent_name in results[env_name]:
             result = results[env_name][agent_name]
             if result:
-                status = "✅" if result['success'] else "❌"
-                print(f"  {agent_name}: {status} {result['steps']} pasos, {result['time']:.3f}s")
+                status = "OK" if result['success'] else "FALLO"
+                print(f"  {agent_name}: {status} - {result['steps']} pasos, {result['time']:.3f}s")
             else:
-                print(f"  {agent_name}: ❌ Error")
+                print(f"  {agent_name}: ERROR")
+
+    # Comparacion
+    print("\n" + "=" * 60)
+    print("COMPARACION DE AGENTES")
+    print("=" * 60)
+
+    for env_name in results:
+        print(f"\n{env_name}:")
+
+        ucs_result = results[env_name].get('UCS')
+        astar_result = results[env_name].get('A*')
+
+        if ucs_result and astar_result:
+            print(f"  UCS:  {ucs_result['steps']} pasos, {ucs_result['time']:.3f}s")
+            print(f"  A*:   {astar_result['steps']} pasos, {astar_result['time']:.3f}s")
+
+            if astar_result['steps'] < ucs_result['steps']:
+                print(f"  -> A* es mejor (menos pasos)")
+            elif ucs_result['steps'] < astar_result['steps']:
+                print(f"  -> UCS es mejor (menos pasos)")
+            elif astar_result['time'] < ucs_result['time']:
+                print(f"  -> A* es mejor (mismo pasos, menos tiempo)")
+            elif ucs_result['time'] < astar_result['time']:
+                print(f"  -> UCS es mejor (mismo pasos, menos tiempo)")
+            else:
+                print(f"  -> Empate")
+        else:
+            print("  -> No se puede comparar (uno o ambos fallaron)")
 
 if __name__ == "__main__":
     main()
